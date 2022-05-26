@@ -15,5 +15,18 @@ const userSchema = new mongoose.Schema({
 userSchema.pre("save", async function (next) {
   const salt = await brcypt.genSalt();
   this.password = await brcypt.hash(this.password, salt);
+  next();
 });
+
+userSchema.statics.login = async function (email, password) {
+  const user = await this.findOne({ email });
+  if (user) {
+    const auth = await brcypt.compare(password, user.password);
+    if (auth) {
+      return user;
+    }
+    throw Error("incorrect password");
+  }
+  throw Error("incorrect Email");
+};
 module.exports = mongoose.model("Users", userSchema);
